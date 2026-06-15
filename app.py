@@ -1,5 +1,5 @@
 import streamlit as st
-from transformers import pipeline
+import google.generativeai as genai
 import fitz  # PyMuPDF
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
@@ -9,17 +9,10 @@ st.title("📚 AI-Powered Study Buddy")
 st.markdown("Your personal AI assistant — explain topics, summarize notes, generate quizzes & answer from your PDFs!")
 st.divider()
 
-# ─── Load Models ───────────────────────────────────────────────────────────────
-@st.cache_resource
-def load_explainer():
-    return pipeline("text2text-generation", model="google/flan-t5-small")
-
-@st.cache_resource
-def load_summarizer():
-    return pipeline("summarization", model="sshleifer/distilbart-cnn-6-6")
-
-explainer  = load_explainer()
-summarizer = load_summarizer()
+# ─── Gemini API Setup ──────────────────────────────────────────────────────────
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # ─── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.title("🔧 Choose Feature")
@@ -27,7 +20,7 @@ feature = st.sidebar.radio("Select a feature:", [
     "💡 Topic Explainer",
     "📝 Notes Summarizer",
     "❓ Quiz Generator",
-    "📄 PDF Summarizer"
+    "📄 PDF Q&A"
 ])
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -44,11 +37,10 @@ if feature == "💡 Topic Explainer":
             st.warning("Please enter a topic!")
         else:
             with st.spinner("Generating explanation..."):
-                prompt = f"Explain {topic} in simple terms:"
-                result = explainer(prompt, max_new_tokens=200)
-                explanation = result[0]["generated_text"]
+                prompt = f"Explain '{topic}' in very simple terms for a student. Keep it clear and easy to understand in 5-6 lines."
+                response = model.generate_content(prompt)
             st.success("✅ Explanation:")
-            st.write(explanation)
+            st.write(response.text)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # FEATURE 2 — Notes Summarizer
@@ -62,14 +54,14 @@ elif feature == "📝 Notes Summarizer":
     if st.button("Summarize"):
         if notes.strip() == "":
             st.warning("Please paste some notes!")
-        elif len(notes.split()) < 30:
-            st.warning("Notes are too short. Please paste at least 30 words.")
+        elif len(notes.split()) < 20:
+            st.warning("Notes too short! Please paste at least 20 words.")
         else:
             with st.spinner("Summarizing..."):
-                result = summarizer(notes, max_length=130, min_length=30, do_sample=False)
-                summary = result[0]["summary_text"]
+                prompt = f"Summarize the following study notes into 5 clear bullet points:\n\n{notes}"
+                response = model.generate_content(prompt)
             st.success("✅ Summary:")
-            st.write(summary)
+            st.write(response.text)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # FEATURE 3 — Quiz Generator
@@ -78,30 +70,31 @@ elif feature == "❓ Quiz Generator":
     st.header("❓ Quiz Generator")
     st.write("Enter a topic and get 5 MCQ quiz questions!")
 
-    topic = st.text_input("Enter a topic:", placeholder="e.g., Photosynthesis, Python basics")
+    topic = st.text_input("Enter a topic:", placeholder="e.g., Photosynthesis, Python basics, World War 2")
 
     if st.button("Generate Quiz"):
         if topic.strip() == "":
             st.warning("Please enter a topic!")
         else:
             with st.spinner("Generating quiz..."):
-                questions = []
-                for i in range(1, 6):
-                    prompt = f"Generate a multiple choice question about {topic} with 4 options A B C D and the answer:"
-                    result = explainer(prompt, max_new_tokens=150)
-                    questions.append(result[0]["generated_text"])
+                prompt = f"""Generate 5 multiple choice questions about '{topic}'.
+For each question provide:
+- The question
+- 4 options (A, B, C, D)
+- The correct answer
+
+Format each question clearly and number them 1-5."""
+                response = model.generate_content(prompt)
 
             st.success("✅ Quiz Generated!")
-            for i, q in enumerate(questions, 1):
-                with st.expander(f"Question {i}"):
-                    st.write(q)
+            st.write(response.text)
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# FEATURE 4 — PDF Summarizer
+# FEATURE 4 — PDF Q&A
 # ═══════════════════════════════════════════════════════════════════════════════
-elif feature == "📄 PDF Summarizer":
-    st.header("📄 PDF Summarizer")
-    st.write("Upload your study PDF and get a summary of the content!")
+elif feature == "📄 PDF Q&A":
+    st.header("📄 PDF Q&A")
+    st.write("Upload your study PDF and ask questions from it!")
 
     uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
@@ -115,12 +108,17 @@ elif feature == "📄 PDF Summarizer":
 
         st.success(f"✅ PDF loaded! ({len(full_text.split())} words extracted)")
 
-        if st.button("Summarize PDF"):
-            with st.spinner("Summarizing PDF..."):
-                # Take first 800 words only (model limit)
-                words = full_text.split()[:800]
-                text_chunk = " ".join(words)
-                result = summarizer(text_chunk, max_length=150, min_length=40, do_sample=False)
-                summary = result[0]["summary_text"]
-            st.success("✅ PDF Summary:")
-            st.write(summary)
+        question = st.text_input("Ask a question from the PDF:", placeholder="e.g., What is the main topic?")
+
+        if st.button("Get Answer"):
+            if question.strip() == "":
+                st.warning("Please enter a question!")
+            else:
+                with st.spinner("Finding answer..."):
+                    context = full_text[:3000]
+                    prompt = f"Based on the following text, answer this question: {question}\n\nText:\n{context}"
+                    response = model.generate_content(prompt)
+                st.success("✅ Answer:")
+                st.write(response.text)
+
+
