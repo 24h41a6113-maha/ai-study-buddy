@@ -1,3 +1,4 @@
 streamlit
-google-generativeai
+transformers
 PyMuPDF
+sentencepiece
