@@ -1,6 +1,7 @@
 streamlit
 transformers==4.40.0
 torch==2.0.1
+torchvision==0.15.2
 sentence-transformers==2.2.2
 faiss-cpu==1.7.4
 PyMuPDF==1.23.0
