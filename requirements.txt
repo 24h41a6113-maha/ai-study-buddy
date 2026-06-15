@@ -1,7 +1,1 @@
-streamlit
-transformers
-torch
-sentence-transformers
-faiss-cpu
-PyMuPDF
-numpy
+transformers==4.40.0
