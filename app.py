@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 import fitz  # PyMuPDF
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
@@ -9,10 +9,16 @@ st.title("📚 AI-Powered Study Buddy")
 st.markdown("Your personal AI assistant — explain topics, summarize notes, generate quizzes & answer from your PDFs!")
 st.divider()
 
-# ─── Gemini API Setup ──────────────────────────────────────────────────────────
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash-8b")
+# ─── Groq Client Setup ─────────────────────────────────────────────────────────
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+def ask_groq(prompt):
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=500
+    )
+    return response.choices[0].message.content
 
 # ─── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.title("🔧 Choose Feature")
@@ -38,9 +44,9 @@ if feature == "💡 Topic Explainer":
         else:
             with st.spinner("Generating explanation..."):
                 prompt = f"Explain '{topic}' in very simple terms for a student. Keep it clear and easy to understand in 5-6 lines."
-                response = model.generate_content(prompt)
+                result = ask_groq(prompt)
             st.success("✅ Explanation:")
-            st.write(response.text)
+            st.write(result)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # FEATURE 2 — Notes Summarizer
@@ -59,9 +65,9 @@ elif feature == "📝 Notes Summarizer":
         else:
             with st.spinner("Summarizing..."):
                 prompt = f"Summarize the following study notes into 5 clear bullet points:\n\n{notes}"
-                response = model.generate_content(prompt)
+                result = ask_groq(prompt)
             st.success("✅ Summary:")
-            st.write(response.text)
+            st.write(result)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # FEATURE 3 — Quiz Generator
@@ -84,10 +90,9 @@ For each question provide:
 - The correct answer
 
 Format each question clearly and number them 1-5."""
-                response = model.generate_content(prompt)
-
+                result = ask_groq(prompt)
             st.success("✅ Quiz Generated!")
-            st.write(response.text)
+            st.write(result)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # FEATURE 4 — PDF Q&A
@@ -117,6 +122,6 @@ elif feature == "📄 PDF Q&A":
                 with st.spinner("Finding answer..."):
                     context = full_text[:3000]
                     prompt = f"Based on the following text, answer this question: {question}\n\nText:\n{context}"
-                    response = model.generate_content(prompt)
+                    result = ask_groq(prompt)
                 st.success("✅ Answer:")
-                st.write(response.text)
+                st.write(result)
