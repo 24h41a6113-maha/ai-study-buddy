@@ -12,7 +12,7 @@ st.divider()
 # ─── Gemini API Setup ──────────────────────────────────────────────────────────
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 # ─── Sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.title("🔧 Choose Feature")
@@ -120,5 +120,3 @@ elif feature == "📄 PDF Q&A":
                     response = model.generate_content(prompt)
                 st.success("✅ Answer:")
                 st.write(response.text)
-
-
