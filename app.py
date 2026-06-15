@@ -12,8 +12,6 @@ st.divider()
 # ─── Groq Client Setup ─────────────────────────────────────────────────────────
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-st.write(client.models.list())
-
 def ask_groq(prompt):
     response = client.chat.completions.create(
         model="llama3.3-70b-versatile",
