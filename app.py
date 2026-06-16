@@ -256,6 +256,30 @@ with c4:
     st.markdown('<div class="stat-card"><div class="icon">📄</div><div class="title">PDF Q&A</div><div class="desc">Ask from your PDFs</div></div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
+
+# ─── Clickable Feature Selector ────────────────────────────────────────────────
+st.markdown('<div style="text-align:center; color:#00ffff; font-size:1.1rem; font-weight:700; margin-bottom:1rem; letter-spacing:1px;">👇 SELECT A FEATURE TO GET STARTED</div>', unsafe_allow_html=True)
+
+if "feature" not in st.session_state:
+    st.session_state.feature = "💡 Topic Explainer"
+
+btn1, btn2, btn3, btn4 = st.columns(4)
+with btn1:
+    if st.button("💡 Topic Explainer"):
+        st.session_state.feature = "💡 Topic Explainer"
+with btn2:
+    if st.button("📝 Notes Summarizer"):
+        st.session_state.feature = "📝 Notes Summarizer"
+with btn3:
+    if st.button("❓ Quiz Generator"):
+        st.session_state.feature = "❓ Quiz Generator"
+with btn4:
+    if st.button("📄 PDF Q&A"):
+        st.session_state.feature = "📄 PDF Q&A"
+
+feature = st.session_state.feature
+
+st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
 # ─── Groq ──────────────────────────────────────────────────────────────────────
@@ -367,4 +391,4 @@ elif feature == "📄 PDF Q&A":
                 type_writer(result, placeholder)
 
 # ─── Footer ────────────────────────────────────────────────────────────────────
-st.markdown('<div class="footer">⚡ Made with ❤️ by <b>Chellingi Kanaka Durga MahaLakshmi</b> | Bonam Venkata Chalamayya Institute of Technology and Science | IBM Edunet Internship 2026</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">⚡ Made with ❤️ by <b>Chellingi Kanaka Durga MahaLakshmi</b> | Bonam Venkata Chalamayya Institute of Technology and Science | IBM Edunet Internship 2024</div>', unsafe_allow_html=True)
