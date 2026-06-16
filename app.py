@@ -237,8 +237,8 @@ st.markdown("""
 
 st.markdown("""
 <div style="text-align:center; margin: 0.5rem 0 1.5rem 0;">
-    <div class="mascot-body">🤖</div><br>
-    <div class="mascot-bubble">✨ Hi! I am Buddy — your AI Study Assistant!</div>
+    <div class="mascot-body">🦉</div><br>
+    <div class="mascot-bubble">✨ Hoot! I am Owly — your wise AI Study Buddy!</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -358,3 +358,10 @@ elif feature == "📄 PDF Q&A":
 
 # ─── Footer ────────────────────────────────────────────────────────────────────
 st.markdown('<div class="footer">⚡ Made with ❤️ by <b>Chellingi Kanaka Durga MahaLakshmi</b> | Bonam Venkata Chalamayya Institute of Technology and Science | IBM Edunet Internship 2026</div>', unsafe_allow_html=True)
+    
+
+
+
+   
+   
+       
