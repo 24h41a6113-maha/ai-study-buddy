@@ -176,6 +176,39 @@ st.markdown("""
     margin-top: 2rem;
 }
 
+
+.mascot-body {
+    font-size: 5rem;
+    animation: mascotFloat 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.8));
+    display: inline-block;
+}
+
+.mascot-bubble {
+    background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(191,0,255,0.1));
+    border: 1px solid rgba(0,255,255,0.4);
+    border-radius: 20px;
+    padding: 0.5rem 1.5rem;
+    color: #00ffff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    animation: bubblePulse 2s ease-in-out infinite;
+    display: inline-block;
+}
+
+@keyframes mascotFloat {
+    0%, 100% { transform: translateY(0px) rotate(-3deg); }
+    25% { transform: translateY(-15px) rotate(3deg); }
+    50% { transform: translateY(-8px) rotate(-2deg); }
+    75% { transform: translateY(-18px) rotate(4deg); }
+}
+
+@keyframes bubblePulse {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+
 div[data-baseweb="radio"] label {
     color: #8892b0 !important;
     font-size: 1rem !important;
@@ -199,6 +232,13 @@ st.markdown("""
 <div class="hero-container">
     <div class="hero-title">⚡ AI STUDY BUDDY ⚡</div>
     <div class="hero-sub">🚀 Your intelligent study companion powered by LLaMA 3.3 70B</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div style="text-align:center; margin: 0.5rem 0 1.5rem 0;">
+    <div class="mascot-body">🤖</div><br>
+    <div class="mascot-bubble">✨ Hi! I am Buddy — your AI Study Assistant!</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -317,4 +357,4 @@ elif feature == "📄 PDF Q&A":
                 type_writer(result, placeholder)
 
 # ─── Footer ────────────────────────────────────────────────────────────────────
-st.markdown('<div class="footer">⚡ Made with ❤️ by <b>Chellingi Kanaka Durga MahaLakshmi</b> | Bonam Venkata Chalamayya Institute of Technology and Science | IBM Edunet Internship 2024</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">⚡ Made with ❤️ by <b>Chellingi Kanaka Durga MahaLakshmi</b> | Bonam Venkata Chalamayya Institute of Technology and Science | IBM Edunet Internship 2026</div>', unsafe_allow_html=True)
