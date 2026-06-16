@@ -1,222 +1,320 @@
 import streamlit as st
 from groq import Groq
-import fitz  # PyMuPDF
+import fitz
+import time
 
-# ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Study Buddy", page_icon="📚", layout="wide")
 
-# ─── Custom CSS ────────────────────────────────────────────────────────────────
+# ─── Custom CSS + Animations ───────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .main { background-color: #0f0f1a; }
-    .stApp { background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%); }
-    
-    .hero-title {
-        text-align: center;
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #00d4ff, #7b2ff7, #ff6b6b);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
-    }
-    .hero-sub {
-        text-align: center;
-        color: #a0aec0;
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-    }
-    .feature-card {
-        background: linear-gradient(135deg, #1e1e3a, #2d2d5e);
-        border: 1px solid #4a4a8a;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin: 0.5rem 0;
-        transition: all 0.3s;
-    }
-    .feature-card:hover { border-color: #00d4ff; }
-    .result-box {
-        background: linear-gradient(135deg, #0d2137, #0d3726);
-        border-left: 4px solid #00d4ff;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-top: 1rem;
-        color: #e2e8f0;
-    }
-    .stButton > button {
-        background: linear-gradient(90deg, #7b2ff7, #00d4ff);
-        color: white;
-        border: none;
-        border-radius: 25px;
-        padding: 0.6rem 2rem;
-        font-weight: 700;
-        font-size: 1rem;
-        transition: all 0.3s;
-        width: 100%;
-    }
-    .stButton > button:hover {
-        transform: scale(1.03);
-        box-shadow: 0 4px 20px rgba(123, 47, 247, 0.5);
-    }
-    .stTextInput > div > input, .stTextArea > div > textarea {
-        background-color: #1e1e3a;
-        color: #e2e8f0;
-        border: 1px solid #4a4a8a;
-        border-radius: 10px;
-    }
-    .stRadio > div { color: #e2e8f0; }
-    .sidebar .sidebar-content { background: #1a1a2e; }
-    h1, h2, h3 { color: #e2e8f0; }
-    .stat-box {
-        background: linear-gradient(135deg, #2d1b69, #11998e);
-        border-radius: 12px;
-        padding: 1rem;
-        text-align: center;
-        color: white;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+* { font-family: 'Rajdhani', sans-serif; }
+
+.stApp {
+    background: #000011;
+    background-image: 
+        radial-gradient(ellipse at 20% 50%, rgba(120, 40, 200, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(0, 200, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(255, 50, 100, 0.08) 0%, transparent 50%);
+}
+
+.hero-container {
+    text-align: center;
+    padding: 2rem 0 1rem 0;
+}
+
+.hero-title {
+    font-family: 'Orbitron', monospace !important;
+    font-size: 3.2rem;
+    font-weight: 900;
+    background: linear-gradient(90deg, #00ffff, #bf00ff, #ff0066, #00ffff);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 4s ease infinite;
+    text-shadow: none;
+    letter-spacing: 2px;
+}
+
+.hero-sub {
+    color: #8892b0;
+    font-size: 1.15rem;
+    margin-top: 0.5rem;
+    letter-spacing: 1px;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); }
+    50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(191, 0, 255, 0.4); }
+}
+
+@keyframes borderGlow {
+    0%, 100% { border-color: #00ffff; }
+    33% { border-color: #bf00ff; }
+    66% { border-color: #ff0066; }
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: 16px;
+    padding: 1.2rem;
+    text-align: center;
+    color: white;
+    animation: fadeInUp 0.6s ease forwards, pulse 3s ease infinite;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+.stat-card:hover {
+    transform: translateY(-5px) scale(1.03);
+    border-color: #bf00ff;
+    box-shadow: 0 10px 40px rgba(191, 0, 255, 0.4);
+}
+.stat-card .icon { font-size: 2rem; }
+.stat-card .title { font-weight: 700; color: #00ffff; font-size: 1.1rem; }
+.stat-card .desc { color: #8892b0; font-size: 0.85rem; }
+
+.feature-header {
+    font-family: 'Orbitron', monospace !important;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #00ffff;
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    margin-bottom: 1rem;
+    animation: fadeInUp 0.4s ease;
+}
+
+.feature-desc {
+    background: linear-gradient(135deg, rgba(0,255,255,0.05), rgba(191,0,255,0.05));
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    color: #ccd6f6;
+    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.5s ease;
+    animation: borderGlow 3s ease infinite;
+}
+
+.result-box {
+    background: linear-gradient(135deg, rgba(0,20,40,0.9), rgba(20,0,40,0.9));
+    border: 1px solid #00ffff;
+    border-radius: 16px;
+    padding: 1.8rem;
+    color: #ccd6f6;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    animation: fadeInUp 0.5s ease;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.15), inset 0 0 30px rgba(0,0,0,0.5);
+    white-space: pre-wrap;
+}
+
+.stButton > button {
+    background: linear-gradient(90deg, #bf00ff, #00ffff, #ff0066);
+    background-size: 200% 200%;
+    color: white !important;
+    border: none !important;
+    border-radius: 30px !important;
+    padding: 0.7rem 2.5rem !important;
+    font-weight: 700 !important;
+    font-size: 1.05rem !important;
+    letter-spacing: 1px;
+    transition: all 0.3s !important;
+    animation: gradientShift 3s ease infinite;
+    width: 100%;
+}
+.stButton > button:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 0 30px rgba(191, 0, 255, 0.7), 0 0 60px rgba(0, 255, 255, 0.3) !important;
+}
+
+.stTextInput > div > input, .stTextArea > div > textarea {
+    background: rgba(0, 20, 40, 0.8) !important;
+    color: #ccd6f6 !important;
+    border: 1px solid rgba(0, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    font-size: 1rem !important;
+}
+.stTextInput > div > input:focus, .stTextArea > div > textarea:focus {
+    border-color: #00ffff !important;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3) !important;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #000022, #0a0015) !important;
+    border-right: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.sidebar-title {
+    font-family: 'Orbitron', monospace;
+    color: #00ffff;
+    font-size: 1.1rem;
+    text-align: center;
+    padding: 0.5rem;
+    text-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+
+.footer {
+    text-align: center;
+    color: #495670;
+    font-size: 0.9rem;
+    padding: 1rem;
+    border-top: 1px solid rgba(0,255,255,0.1);
+    margin-top: 2rem;
+}
+
+div[data-baseweb="radio"] label {
+    color: #8892b0 !important;
+    font-size: 1rem !important;
+}
+
+.success-badge {
+    display: inline-block;
+    background: linear-gradient(90deg, #00ffff20, #bf00ff20);
+    border: 1px solid #00ffff;
+    border-radius: 20px;
+    padding: 0.3rem 1rem;
+    color: #00ffff;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Hero Section ──────────────────────────────────────────────────────────────
-st.markdown('<div class="hero-title">📚 AI Study Buddy</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-sub">Your personal AI-powered assistant for smarter studying 🚀</div>', unsafe_allow_html=True)
+# ─── Hero ──────────────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="hero-container">
+    <div class="hero-title">⚡ AI STUDY BUDDY ⚡</div>
+    <div class="hero-sub">🚀 Your intelligent study companion powered by LLaMA 3.3 70B</div>
+</div>
+""", unsafe_allow_html=True)
 
-# ─── Stats Row ─────────────────────────────────────────────────────────────────
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.markdown('<div class="stat-box">💡<br><b>Topic Explainer</b><br>Instant AI explanations</div>', unsafe_allow_html=True)
-with col2:
-    st.markdown('<div class="stat-box">📝<br><b>Summarizer</b><br>Condense your notes</div>', unsafe_allow_html=True)
-with col3:
-    st.markdown('<div class="stat-box">❓<br><b>Quiz Generator</b><br>Auto MCQ creation</div>', unsafe_allow_html=True)
-with col4:
-    st.markdown('<div class="stat-box">📄<br><b>PDF Q&A</b><br>Ask from your PDFs</div>', unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
+# ─── Stat Cards ────────────────────────────────────────────────────────────────
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    st.markdown('<div class="stat-card"><div class="icon">💡</div><div class="title">EXPLAINER</div><div class="desc">Instant topic explanations</div></div>', unsafe_allow_html=True)
+with c2:
+    st.markdown('<div class="stat-card"><div class="icon">📝</div><div class="title">SUMMARIZER</div><div class="desc">Condense your notes</div></div>', unsafe_allow_html=True)
+with c3:
+    st.markdown('<div class="stat-card"><div class="icon">❓</div><div class="title">QUIZ GEN</div><div class="desc">Auto MCQ creation</div></div>', unsafe_allow_html=True)
+with c4:
+    st.markdown('<div class="stat-card"><div class="icon">📄</div><div class="title">PDF Q&A</div><div class="desc">Ask from your PDFs</div></div>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
-# ─── Groq Client Setup ─────────────────────────────────────────────────────────
+# ─── Groq ──────────────────────────────────────────────────────────────────────
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 def ask_groq(prompt):
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=500
+        max_tokens=600
     )
     return response.choices[0].message.content
 
-# ─── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.markdown("## 🎯 Choose Feature")
-st.sidebar.markdown("---")
-feature = st.sidebar.radio("", [
-    "💡 Topic Explainer",
-    "📝 Notes Summarizer",
-    "❓ Quiz Generator",
-    "📄 PDF Q&A"
-])
-st.sidebar.markdown("---")
-st.sidebar.markdown("**🤖 Powered by**")
-st.sidebar.markdown("Groq API + LLaMA 3.3 70B")
-st.sidebar.markdown("**⚡ Ultra-fast AI responses**")
+def type_writer(text, placeholder):
+    displayed = ""
+    for char in text:
+        displayed += char
+        placeholder.markdown(f'<div class="result-box">{displayed}▌</div>', unsafe_allow_html=True)
+        time.sleep(0.008)
+    placeholder.markdown(f'<div class="result-box">{displayed}</div>', unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# FEATURE 1 — Topic Explainer
+# ─── Sidebar ───────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown('<div class="sidebar-title">🎯 FEATURES</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    feature = st.radio("", [
+        "💡 Topic Explainer",
+        "📝 Notes Summarizer",
+        "❓ Quiz Generator",
+        "📄 PDF Q&A"
+    ])
+    st.markdown("---")
+    st.markdown('<div style="color:#495670; font-size:0.85rem; text-align:center;">🤖 Groq API<br>⚡ LLaMA 3.3 70B<br>🌐 Streamlit Cloud</div>', unsafe_allow_html=True)
+
 # ═══════════════════════════════════════════════════════════════════════════════
 if feature == "💡 Topic Explainer":
-    st.markdown("## 💡 Topic Explainer")
-    st.markdown('<div class="feature-card">Type any topic and get a simple, clear AI-powered explanation instantly!</div>', unsafe_allow_html=True)
-    st.markdown("")
-
-    topic = st.text_input("🔍 Enter a topic:", placeholder="e.g., Photosynthesis, Newton's Laws, Machine Learning, Blockchain...")
-
-    if st.button("✨ Explain Now"):
+    st.markdown('<div class="feature-header">💡 TOPIC EXPLAINER</div>', unsafe_allow_html=True)
+    st.markdown('<div class="feature-desc">🔍 Type any topic — get a simple, student-friendly AI explanation with real-life examples!</div>', unsafe_allow_html=True)
+    topic = st.text_input("", placeholder="e.g., Photosynthesis, Machine Learning, Quantum Physics, Blockchain...")
+    if st.button("⚡ EXPLAIN NOW"):
         if topic.strip() == "":
             st.warning("⚠️ Please enter a topic!")
         else:
-            with st.spinner("🤖 AI is thinking..."):
-                prompt = f"Explain '{topic}' in very simple terms for a student. Use easy language, give a real-life example, and keep it within 6-8 lines."
-                result = ask_groq(prompt)
-            st.markdown(f'<div class="result-box">✅ <b>Explanation:</b><br><br>{result}</div>', unsafe_allow_html=True)
+            with st.spinner("🤖 AI is generating explanation..."):
+                result = ask_groq(f"Explain '{topic}' in simple terms for a student. Use easy language, give a real-life example, and keep it 6-8 lines.")
+            st.markdown('<div class="success-badge">✅ Explanation Ready!</div>', unsafe_allow_html=True)
+            placeholder = st.empty()
+            type_writer(result, placeholder)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# FEATURE 2 — Notes Summarizer
-# ═══════════════════════════════════════════════════════════════════════════════
 elif feature == "📝 Notes Summarizer":
-    st.markdown("## 📝 Notes Summarizer")
-    st.markdown('<div class="feature-card">Paste your long study notes and get a crisp, bullet-point summary in seconds!</div>', unsafe_allow_html=True)
-    st.markdown("")
-
-    notes = st.text_area("📋 Paste your notes here:", height=200, placeholder="Paste your study notes here...")
-
-    if st.button("⚡ Summarize Now"):
+    st.markdown('<div class="feature-header">📝 NOTES SUMMARIZER</div>', unsafe_allow_html=True)
+    st.markdown('<div class="feature-desc">📋 Paste your long notes — get crisp bullet-point summary in seconds!</div>', unsafe_allow_html=True)
+    notes = st.text_area("", height=200, placeholder="Paste your study notes here...")
+    if st.button("⚡ SUMMARIZE NOW"):
         if notes.strip() == "":
             st.warning("⚠️ Please paste some notes!")
         elif len(notes.split()) < 20:
-            st.warning("⚠️ Notes too short! Please paste at least 20 words.")
+            st.warning("⚠️ Too short! Please paste at least 20 words.")
         else:
-            with st.spinner("🤖 Summarizing your notes..."):
-                prompt = f"Summarize the following study notes into 5 clear bullet points. Make it concise and easy to remember:\n\n{notes}"
-                result = ask_groq(prompt)
-            st.markdown(f'<div class="result-box">✅ <b>Summary:</b><br><br>{result}</div>', unsafe_allow_html=True)
+            with st.spinner("🤖 AI is summarizing..."):
+                result = ask_groq(f"Summarize these study notes into 5 clear bullet points. Be concise:\n\n{notes}")
+            st.markdown('<div class="success-badge">✅ Summary Ready!</div>', unsafe_allow_html=True)
+            placeholder = st.empty()
+            type_writer(result, placeholder)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# FEATURE 3 — Quiz Generator
-# ═══════════════════════════════════════════════════════════════════════════════
 elif feature == "❓ Quiz Generator":
-    st.markdown("## ❓ Quiz Generator")
-    st.markdown('<div class="feature-card">Enter any topic and get 5 MCQ questions to test your knowledge instantly!</div>', unsafe_allow_html=True)
-    st.markdown("")
-
-    topic = st.text_input("🎯 Enter a topic for the quiz:", placeholder="e.g., Photosynthesis, Python basics, World War 2...")
-
-    if st.button("🎲 Generate Quiz"):
+    st.markdown('<div class="feature-header">❓ QUIZ GENERATOR</div>', unsafe_allow_html=True)
+    st.markdown('<div class="feature-desc">🎯 Enter any topic — get 5 MCQ questions to test your knowledge!</div>', unsafe_allow_html=True)
+    topic = st.text_input("", placeholder="e.g., Photosynthesis, Python basics, Indian History...")
+    if st.button("🎲 GENERATE QUIZ"):
         if topic.strip() == "":
             st.warning("⚠️ Please enter a topic!")
         else:
-            with st.spinner("🤖 Creating your quiz..."):
-                prompt = f"""Generate 5 multiple choice questions about '{topic}'.
-For each question:
-- Write the question clearly
-- Give 4 options (A, B, C, D)
-- Mention the correct answer at the end
+            with st.spinner("🤖 AI is creating your quiz..."):
+                result = ask_groq(f"Generate 5 MCQ questions about '{topic}'. For each: question, 4 options (A B C D), correct answer. Number 1-5.")
+            st.markdown('<div class="success-badge">✅ Quiz Ready! Good Luck! 🍀</div>', unsafe_allow_html=True)
+            st.balloons()
+            placeholder = st.empty()
+            type_writer(result, placeholder)
 
-Number them 1 to 5. Make questions educational and interesting."""
-                result = ask_groq(prompt)
-            st.markdown(f'<div class="result-box">✅ <b>Your Quiz:</b><br><br>{result}</div>', unsafe_allow_html=True)
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# FEATURE 4 — PDF Q&A
-# ═══════════════════════════════════════════════════════════════════════════════
 elif feature == "📄 PDF Q&A":
-    st.markdown("## 📄 PDF Q&A")
-    st.markdown('<div class="feature-card">Upload your study PDF and ask any question — AI will answer from your document!</div>', unsafe_allow_html=True)
-    st.markdown("")
-
-    uploaded_file = st.file_uploader("📁 Upload a PDF file", type=["pdf"])
-
+    st.markdown('<div class="feature-header">📄 PDF Q&A</div>', unsafe_allow_html=True)
+    st.markdown('<div class="feature-desc">📁 Upload your study PDF — ask any question and AI answers from your document!</div>', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("", type=["pdf"])
     if uploaded_file is not None:
-        with st.spinner("📖 Reading your PDF..."):
-            pdf_bytes = uploaded_file.read()
-            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-            full_text = ""
-            for page in doc:
-                full_text += page.get_text()
-
-        st.success(f"✅ PDF loaded successfully! ({len(full_text.split())} words extracted)")
-
-        question = st.text_input("❓ Ask a question from the PDF:", placeholder="e.g., What is the main topic? Summarize chapter 1...")
-
-        if st.button("🔍 Get Answer"):
+        with st.spinner("📖 Reading PDF..."):
+            doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+            full_text = "".join([page.get_text() for page in doc])
+        st.markdown(f'<div class="success-badge">✅ PDF Loaded! {len(full_text.split())} words extracted</div>', unsafe_allow_html=True)
+        question = st.text_input("", placeholder="Ask anything from your PDF...")
+        if st.button("🔍 GET ANSWER"):
             if question.strip() == "":
                 st.warning("⚠️ Please enter a question!")
             else:
-                with st.spinner("🤖 Finding your answer..."):
-                    context = full_text[:3000]
-                    prompt = f"Based on the following text, answer this question clearly: {question}\n\nText:\n{context}"
-                    result = ask_groq(prompt)
-                st.markdown(f'<div class="result-box">✅ <b>Answer:</b><br><br>{result}</div>', unsafe_allow_html=True)
+                with st.spinner("🤖 Finding answer from your PDF..."):
+                    result = ask_groq(f"Based on this text, answer: {question}\n\nText:\n{full_text[:3000]}")
+                st.markdown('<div class="success-badge">✅ Answer Found!</div>', unsafe_allow_html=True)
+                placeholder = st.empty()
+                type_writer(result, placeholder)
 
 # ─── Footer ────────────────────────────────────────────────────────────────────
-st.divider()
-st.markdown('<p style="text-align:center; color:#4a4a8a;">Made with ❤️ by Chellingi Kanaka Durga MahaLakshmi | BVCITS | IBM Edunet Internship 2024</p>', unsafe_allow_html=True)
-  
+st.markdown('<div class="footer">⚡ Made with ❤️ by <b>Chellingi Kanaka Durga MahaLakshmi</b> | Bonam Venkata Chalamayya Institute of Technology and Science | IBM Edunet Internship 2024</div>', unsafe_allow_html=True)
