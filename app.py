@@ -288,6 +288,16 @@ with st.sidebar:
         "📄 PDF Q&A"
     ])
     st.markdown("---")
+    st.markdown('<div style="color:#00ffff; font-weight:700; font-size:1rem;">📖 How to Use</div>', unsafe_allow_html=True)
+    if feature == "💡 Topic Explainer":
+        st.markdown('<div style="color:#8892b0; font-size:0.9rem;">1️⃣ Type any topic in the box<br><br>2️⃣ Click <b style="color:#00ffff;">EXPLAIN NOW</b><br><br>3️⃣ Read your AI explanation!</div>', unsafe_allow_html=True)
+    elif feature == "📝 Notes Summarizer":
+        st.markdown('<div style="color:#8892b0; font-size:0.9rem;">1️⃣ Paste your study notes in the text box<br><br>2️⃣ Click <b style="color:#00ffff;">SUMMARIZE NOW</b><br><br>3️⃣ Get 5 bullet point summary!</div>', unsafe_allow_html=True)
+    elif feature == "❓ Quiz Generator":
+        st.markdown('<div style="color:#8892b0; font-size:0.9rem;">1️⃣ Type a topic you want to practice<br><br>2️⃣ Click <b style="color:#00ffff;">GENERATE QUIZ</b><br><br>3️⃣ Answer 5 MCQ questions!</div>', unsafe_allow_html=True)
+    elif feature == "📄 PDF Q&A":
+        st.markdown('<div style="color:#8892b0; font-size:0.9rem;">1️⃣ Upload your PDF file<br><br>2️⃣ Type your question<br><br>3️⃣ Click <b style="color:#00ffff;">GET ANSWER</b><br><br>4️⃣ AI answers from your PDF!</div>', unsafe_allow_html=True)
+    st.markdown("---")
     st.markdown('<div style="color:#495670; font-size:0.85rem; text-align:center;">🤖 Groq API<br>⚡ LLaMA 3.3 70B<br>🌐 Streamlit Cloud</div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -358,10 +368,3 @@ elif feature == "📄 PDF Q&A":
 
 # ─── Footer ────────────────────────────────────────────────────────────────────
 st.markdown('<div class="footer">⚡ Made with ❤️ by <b>Chellingi Kanaka Durga MahaLakshmi</b> | Bonam Venkata Chalamayya Institute of Technology and Science | IBM Edunet Internship 2026</div>', unsafe_allow_html=True)
-    
-
-
-
-   
-   
-       
